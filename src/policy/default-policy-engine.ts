@@ -5,6 +5,18 @@ import type { PolicyEngine } from "./engine.js";
 
 const DESTRUCTIVE_COMMANDS = new Set(["rm", "mv", "chmod", "chown"]);
 const NETWORK_COMMANDS = new Set(["curl", "wget", "nc", "scp", "ssh"]);
+const PACKAGE_MANAGER_COMMANDS = new Set([
+  "npm",
+  "pnpm",
+  "yarn",
+  "bun",
+  "pip",
+  "pip3",
+  "uv",
+  "poetry",
+  "cargo",
+  "go"
+]);
 
 export class DefaultPolicyEngine implements PolicyEngine {
   async evaluate(context: PolicyContext): Promise<PolicyDecision> {
@@ -37,12 +49,42 @@ export class DefaultPolicyEngine implements PolicyEngine {
       };
     }
 
+    if (context.sandboxMode === "danger_full_access") {
+      return {
+        decision: "require_approval",
+        code: "danger_full_access_requested",
+        category: "environment",
+        reason: "Danger-full-access mode requires explicit approval.",
+        violations
+      };
+    }
+
+    if (isPackageInstallCommand(context.command, context.args)) {
+      return {
+        decision: "require_approval",
+        code: "package_install_command",
+        category: "environment",
+        reason: "Package installation requires explicit approval.",
+        violations
+      };
+    }
+
     if (DESTRUCTIVE_COMMANDS.has(context.command)) {
       return {
         decision: "require_approval",
         code: "destructive_command",
         category: "destructive",
         reason: "Potentially destructive command requires approval.",
+        violations
+      };
+    }
+
+    if (hasAbsolutePathArgumentOutsideRoots(context.args, context.writableRoots)) {
+      return {
+        decision: "require_approval",
+        code: "absolute_path_target_outside_writable_roots",
+        category: "filesystem",
+        reason: "Command targets an absolute path outside writable roots.",
         violations
       };
     }
@@ -55,4 +97,31 @@ export class DefaultPolicyEngine implements PolicyEngine {
       violations
     };
   }
+}
+
+function isPackageInstallCommand(command: string, args: string[]): boolean {
+  if (!PACKAGE_MANAGER_COMMANDS.has(command)) {
+    return false;
+  }
+
+  const joined = args.join(" ");
+  return /\b(add|install|sync|fetch|get)\b/.test(joined);
+}
+
+function hasAbsolutePathArgumentOutsideRoots(
+  args: string[],
+  writableRoots: string[]
+): boolean {
+  const normalizedRoots = writableRoots.map((root) => path.resolve(root));
+
+  return args.some((arg) => {
+    if (!arg.startsWith("/")) {
+      return false;
+    }
+
+    const normalizedArg = path.resolve(arg);
+    return !normalizedRoots.some(
+      (root) => normalizedArg === root || normalizedArg.startsWith(`${root}${path.sep}`)
+    );
+  });
 }

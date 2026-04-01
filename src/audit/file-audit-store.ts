@@ -93,6 +93,8 @@ export class FileAuditStore implements AuditStore {
         command: record.request.command,
         args: record.request.args,
         cwd: record.request.cwd,
+        code: record.policyDecision.code,
+        category: record.policyDecision.category,
         reason: record.policyDecision.reason,
         requestedAt: record.result.startedAt
       };

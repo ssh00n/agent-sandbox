@@ -174,3 +174,20 @@
 - 결과: 이벤트 타임라인에 `setup_started`와 `setup_completed`가 기록됨
 - 결과: 저장된 record와 events의 `env.API_KEY`는 `$API_KEY`로 마스킹됨
 - 결과: setup stdout preview의 `setup-real-secret-stage`도 `setup-$API_KEY`로 마스킹됨
+
+### Step 30
+
+- 변경: policy decision에 `category`, `code`를 활용한 세분화 규칙 확장
+- 추가 규칙: `danger_full_access_requested`, `package_install_command`, `absolute_path_target_outside_writable_roots`
+- 목적: approval/deny 이유를 발표와 데모에서 더 명확하게 설명할 수 있게 정리
+
+### Step 31
+
+- 변경: CLI/TUI approval 목록에 `category`, `code` 추가
+- 변경: run 상세에 정책 category/code와 stage summary를 더 분명하게 표시
+- 변경: events 출력에서 `setup:start`, `setup:done`, `approval:requested` 같은 읽기 쉬운 라벨 사용
+
+### Step 32
+
+- 검증: `danger_full_access`, `npm install`, `/etc/hosts` absolute path target 케이스를 재평가
+- 결과: 각각 `danger_full_access_requested`, `package_install_command`, `absolute_path_target_outside_writable_roots`로 분류되는 것 확인

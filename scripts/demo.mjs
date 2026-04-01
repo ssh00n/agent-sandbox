@@ -169,7 +169,7 @@ function prettyPrint(value) {
   if (isRecord(value) && Array.isArray(value.events) && typeof value.runId === "string") {
     printSection(`Events ${value.runId}`);
     for (const event of value.events) {
-      console.log(`${event.timestamp}  ${event.type}`);
+      console.log(`${event.timestamp}  ${formatEventType(event.type)}`);
       if (event.data && Object.keys(event.data).length > 0) {
         console.log(indent(JSON.stringify(event.data, null, 2), 2));
       }
@@ -206,6 +206,8 @@ function printApprovalSummary(approval) {
   console.log(`  status   ${approval.status}`);
   console.log(`  command  ${formatCommand(approval.command, approval.args)}`);
   console.log(`  cwd      ${approval.cwd}`);
+  console.log(`  category ${approval.category ?? "-"}`);
+  console.log(`  code     ${approval.code ?? "-"}`);
   console.log(`  reason   ${approval.reason}`);
   console.log(`  asked    ${approval.requestedAt ?? "-"}`);
 }
@@ -280,6 +282,25 @@ function summarizeStages(record) {
   }
 
   return "setup -> agent";
+}
+
+function formatEventType(type) {
+  switch (type) {
+    case "setup_started":
+      return "setup:start";
+    case "setup_completed":
+      return "setup:done";
+    case "setup_failed":
+      return "setup:fail";
+    case "approval_requested":
+      return "approval:requested";
+    case "approval_granted":
+      return "approval:granted";
+    case "approval_denied":
+      return "approval:denied";
+    default:
+      return type;
+  }
 }
 
 function replaceRepoRoot(value, repoRoot) {
