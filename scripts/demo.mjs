@@ -219,9 +219,16 @@ function printRunDetail(record) {
   console.log(`command    ${formatCommand(record.request.command, record.request.args)}`);
   console.log(`cwd        ${record.request.cwd}`);
   console.log(`policy     ${record.policyDecision.decision}`);
+  console.log(`category   ${record.policyDecision.category ?? "-"}`);
+  console.log(`code       ${record.policyDecision.code ?? "-"}`);
   console.log(`reason     ${record.policyDecision.reason}`);
   console.log(`started    ${record.result?.startedAt ?? "-"}`);
   console.log(`finished   ${record.result?.finishedAt ?? "-"}`);
+
+  const stageSummary = summarizeStages(record);
+  if (stageSummary) {
+    console.log(`stages     ${stageSummary}`);
+  }
 
   if (record.result?.stdout) {
     console.log("\nstdout:");
@@ -260,6 +267,19 @@ function isRunRecord(value) {
     isRecord(value.request) &&
     isRecord(value.policyDecision)
   );
+}
+
+function summarizeStages(record) {
+  const hasSetup = Array.isArray(record.request.setupCommands) && record.request.setupCommands.length > 0;
+  if (!hasSetup) {
+    return record.request.runner === "docker" ? "agent-only" : "";
+  }
+
+  if (record.result?.status === "awaiting_approval") {
+    return "pending-approval-before-setup";
+  }
+
+  return "setup -> agent";
 }
 
 function replaceRepoRoot(value, repoRoot) {

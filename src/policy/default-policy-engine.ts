@@ -20,6 +20,8 @@ export class DefaultPolicyEngine implements PolicyEngine {
       violations.push("cwd_outside_writable_roots");
       return {
         decision: "deny",
+        code: "cwd_outside_writable_roots",
+        category: "filesystem",
         reason: "Current working directory is outside writable roots.",
         violations
       };
@@ -28,6 +30,8 @@ export class DefaultPolicyEngine implements PolicyEngine {
     if (context.requestNetwork || NETWORK_COMMANDS.has(context.command)) {
       return {
         decision: "require_approval",
+        code: "network_capable_command",
+        category: "network",
         reason: "Network-capable command requires explicit approval.",
         violations
       };
@@ -36,6 +40,8 @@ export class DefaultPolicyEngine implements PolicyEngine {
     if (DESTRUCTIVE_COMMANDS.has(context.command)) {
       return {
         decision: "require_approval",
+        code: "destructive_command",
+        category: "destructive",
         reason: "Potentially destructive command requires approval.",
         violations
       };
@@ -43,6 +49,8 @@ export class DefaultPolicyEngine implements PolicyEngine {
 
     return {
       decision: "allow",
+      code: "allowed_by_default_policy",
+      category: "default",
       reason: "Command is allowed by the default policy.",
       violations
     };

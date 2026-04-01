@@ -1,6 +1,7 @@
 export type SandboxMode = "read_only" | "workspace_write" | "danger_full_access";
 
 export type ApprovalDecision = "allow" | "deny" | "require_approval";
+export type PolicyCategory = "filesystem" | "network" | "destructive" | "default";
 
 export type RunStatus =
   | "queued"
@@ -57,6 +58,8 @@ export interface PolicyContext {
 
 export interface PolicyDecision {
   decision: ApprovalDecision;
+  code: string;
+  category: PolicyCategory;
   reason: string;
   violations: string[];
 }
