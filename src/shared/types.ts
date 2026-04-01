@@ -7,6 +7,7 @@ export type PolicyCategory =
   | "destructive"
   | "environment"
   | "default";
+export type PolicySeverity = "low" | "medium" | "high";
 export type PolicyIntent =
   | "safe_read"
   | "network_access"
@@ -72,7 +73,9 @@ export interface PolicyDecision {
   decision: ApprovalDecision;
   code: string;
   category: PolicyCategory;
+  severity: PolicySeverity;
   intent: PolicyIntent;
+  summary: string;
   reason: string;
   violations: string[];
 }
@@ -109,7 +112,9 @@ export interface ApprovalSummary {
   cwd: string;
   code?: string;
   category?: PolicyCategory;
+  severity?: PolicySeverity;
   intent?: PolicyIntent;
+  summary?: string;
   reason: string;
   requestedAt: string | null;
 }

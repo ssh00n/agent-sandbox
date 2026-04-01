@@ -5,6 +5,7 @@ Codex 스타일 샌드박스 실행 환경을 실험하기 위한 TypeScript 프
 
 - 명령 실행 오케스트레이터
 - 정책 엔진과 approval flow
+- intent / severity / summary 기반 정책 설명
 - macOS / Docker runner
 - 파일 기반 감사 로그와 run/event 조회
 - 검증용 CLI/TUI 래퍼

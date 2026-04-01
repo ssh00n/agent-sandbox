@@ -215,8 +215,10 @@ function printApprovalSummary(approval) {
   console.log(`  command  ${formatCommand(approval.command, approval.args)}`);
   console.log(`  cwd      ${approval.cwd}`);
   console.log(`  category ${approval.category ?? "-"}`);
+  console.log(`  severity ${approval.severity ?? "-"}`);
   console.log(`  intent   ${approval.intent ?? "-"}`);
   console.log(`  code     ${approval.code ?? "-"}`);
+  console.log(`  summary  ${approval.summary ?? "-"}`);
   console.log(`  reason   ${approval.reason}`);
   console.log(`  asked    ${approval.requestedAt ?? "-"}`);
 }
@@ -231,8 +233,10 @@ function printRunDetail(record) {
   console.log(`cwd        ${record.request.cwd}`);
   console.log(`policy     ${record.policyDecision.decision}`);
   console.log(`category   ${record.policyDecision.category ?? "-"}`);
+  console.log(`severity   ${record.policyDecision.severity ?? "-"}`);
   console.log(`intent     ${record.policyDecision.intent ?? "-"}`);
   console.log(`code       ${record.policyDecision.code ?? "-"}`);
+  console.log(`summary    ${record.policyDecision.summary ?? "-"}`);
   console.log(`reason     ${record.policyDecision.reason}`);
   console.log(`started    ${record.result?.startedAt ?? "-"}`);
   console.log(`finished   ${record.result?.finishedAt ?? "-"}`);
@@ -317,7 +321,10 @@ function presentPrint(value) {
   if (isRunRecord(value)) {
     printSection(`Run ${value.runId ?? value.result?.runId ?? "unknown"}`);
     console.log(`${value.request.command} ${value.request.args.join(" ")}`.trim());
-    console.log(`status: ${value.result?.status ?? "-"} | policy: ${value.policyDecision.intent} (${value.policyDecision.code})`);
+    console.log(
+      `status: ${value.result?.status ?? "-"} | policy: ${value.policyDecision.intent} (${value.policyDecision.code}) | severity: ${value.policyDecision.severity}`
+    );
+    console.log(`why: ${value.policyDecision.summary}`);
     const stages = summarizeStages(value);
     if (stages) {
       console.log(`flow: ${stages}`);
@@ -335,7 +342,7 @@ function presentPrint(value) {
     printSection("Approvals");
     for (const approval of value.approvals) {
       console.log(
-        `${approval.runId} | ${approval.intent ?? "-"} | ${approval.code ?? "-"} | ${approval.command} ${approval.args.join(" ")}`
+        `${approval.runId} | ${approval.intent ?? "-"} | ${approval.severity ?? "-"} | ${approval.code ?? "-"} | ${approval.command} ${approval.args.join(" ")}`
       );
     }
     if (value.approvals.length === 0) {

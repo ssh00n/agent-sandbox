@@ -95,7 +95,9 @@ export class FileAuditStore implements AuditStore {
         cwd: record.request.cwd,
         code: record.policyDecision.code,
         category: record.policyDecision.category,
+        severity: record.policyDecision.severity,
         intent: record.policyDecision.intent,
+        summary: record.policyDecision.summary,
         reason: record.policyDecision.reason,
         requestedAt: record.result.startedAt
       };

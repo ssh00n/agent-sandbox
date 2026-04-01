@@ -220,3 +220,15 @@
 - 변경: [docs/cli-wrapper-testing.md](cli-wrapper-testing.md)에 `demo:all` 발표형 사용법 추가
 - 내용: 자동 승인 기본값, 거절/대기 유지 옵션, 단계별 출력 구조와 추천 시나리오 반영
 - 다음 작업: build 확인 후 remote에 반영
+
+### Step 38
+
+- 변경: policy decision에 `severity`, `summary` 추가
+- 목적: intent를 사람이 바로 읽을 수 있는 위험도와 한 줄 설명으로 확장
+- 변경: approval summary에도 같은 정책 메타데이터 저장
+
+### Step 39
+
+- 변경: `demo.mjs`, `demo-all.mjs`가 `severity`, `summary`를 기본 출력에 포함하도록 보강
+- 검증: build 통과 후 `curl`, `npm install`, `rm`, `cat` 케이스에서 intent 분류가 유지되는 것 확인
+- 변경: README와 CLI 테스트 문서에 새 정책 메타데이터 설명 추가

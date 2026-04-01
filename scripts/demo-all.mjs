@@ -40,6 +40,8 @@ async function main() {
   if (pending) {
     console.log(`pending   yes`);
     console.log(`policy    ${pending.intent ?? "-"} (${pending.code ?? "-"})`);
+    console.log(`severity  ${pending.severity ?? "-"}`);
+    console.log(`summary   ${pending.summary ?? "-"}`);
     console.log(`reason    ${pending.reason}`);
 
     if (action === "approve") {
@@ -127,6 +129,8 @@ function printStep(index, title) {
 function printRunSummary(record) {
   console.log(`status    ${record.result?.status ?? "-"}`);
   console.log(`policy    ${record.policyDecision?.intent ?? "-"} (${record.policyDecision?.code ?? "-"})`);
+  console.log(`severity  ${record.policyDecision?.severity ?? "-"}`);
+  console.log(`summary   ${record.policyDecision?.summary ?? "-"}`);
   if (record.result?.exitCode !== null && record.result?.exitCode !== undefined) {
     console.log(`exitCode  ${record.result.exitCode}`);
   }

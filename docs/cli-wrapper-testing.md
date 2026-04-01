@@ -55,6 +55,7 @@ npm run demo:approvals
 ```
 
 현재 `awaiting_approval` 상태인 run만 모아 보여준다.
+각 항목에는 `intent`, `severity`, `code`, `summary`가 함께 표시된다.
 
 ### 전체 run 목록 조회
 
@@ -71,6 +72,7 @@ npm run demo:run -- <RUN_ID>
 ```
 
 요청 원문, 정책 판단, 최종 결과까지 한 번에 볼 수 있다.
+정책 판단에는 `category`, `severity`, `intent`, `code`, `summary`, `reason`이 포함된다.
 
 ### 이벤트 타임라인 조회
 
@@ -120,6 +122,7 @@ npm run demo:all -- examples/docker-approval-success-run.json --leave-pending
 - `== Scenario ==`에서 시나리오 개요 확인
 - `[Step N] ...` 형식으로 단계별 진행 표시
 - `policy`, `status`, `exitCode`, `stdout`, `stderr` 핵심만 요약
+- `severity`, `summary`로 왜 승인/차단인지 바로 해석 가능
 - 이벤트는 `approval:requested`, `setup:start`, `setup:done` 같은 짧은 라벨로 표시
 
 ## 3. 추천 테스트 순서
