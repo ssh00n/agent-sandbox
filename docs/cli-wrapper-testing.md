@@ -97,12 +97,30 @@ npm run demo:deny -- <RUN_ID>
 npm run demo:all -- examples/docker-approval-success-run.json
 ```
 
+기본값은 `승인 필요 시 자동 승인`이다.
+옵션으로 흐름을 바꿀 수 있다.
+
+```bash
+npm run demo:all -- examples/docker-approval-success-run.json --approve
+npm run demo:all -- examples/docker-approval-success-run.json --deny
+npm run demo:all -- examples/docker-approval-success-run.json --leave-pending
+```
+
 동작 순서는 다음과 같다.
 
 1. 시나리오로 run 생성
-2. 승인 필요 여부 확인
-3. 승인 필요 시 자동 승인
-4. 최종 이벤트 타임라인 출력
+2. 초기 run 상태 확인
+3. 승인 필요 여부 확인
+4. 선택한 액션에 따라 승인, 거절, 또는 대기 유지
+5. 이벤트 타임라인 출력
+6. 최종 run 상태 출력
+
+출력은 발표용 요약 형식으로 정리된다.
+
+- `== Scenario ==`에서 시나리오 개요 확인
+- `[Step N] ...` 형식으로 단계별 진행 표시
+- `policy`, `status`, `exitCode`, `stdout`, `stderr` 핵심만 요약
+- 이벤트는 `approval:requested`, `setup:start`, `setup:done` 같은 짧은 라벨로 표시
 
 ## 3. 추천 테스트 순서
 
@@ -141,9 +159,7 @@ npm run demo:run -- <RUN_ID>
 ### C. 거절 시나리오
 
 ```bash
-npm run demo:deny -- <RUN_ID>
-npm run demo:run -- <RUN_ID>
-npm run demo:events -- <RUN_ID>
+npm run demo:all -- examples/docker-approval-success-run.json --deny
 ```
 
 기대 결과:
@@ -151,7 +167,19 @@ npm run demo:events -- <RUN_ID>
 - 상태가 `blocked`
 - events에 `approval_denied`, `blocked`가 남음
 
-### D. 런타임 네트워크 차단
+### D. 발표용 대기 시나리오
+
+```bash
+npm run demo:all -- examples/docker-approval-success-run.json --leave-pending
+```
+
+기대 결과:
+
+- approval 요청까지만 진행
+- 최종 상태가 `awaiting_approval`
+- events에 `approval_requested`가 남음
+
+### E. 런타임 네트워크 차단
 
 이 경우는 runner 자체 검증이라 `demo:create`보다 별도 예시/스크립트와 함께 보는 것이 좋다.
 핵심 확인 포인트는 agent 단계에서 `Could not resolve host` 같은 네트워크 실패가 발생하는지다.

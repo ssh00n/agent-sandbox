@@ -208,3 +208,15 @@
 
 - 검증: `npm install` 케이스가 `intent=package_installation`으로 기록되는 것 확인
 - 검증: build/check 재통과
+
+### Step 36
+
+- 변경: `scripts/demo-all.mjs`를 발표용 단계 실행 흐름으로 재구성
+- 변경: 시나리오 개요, 단계별 진행, 최종 상태 요약을 한 화면에서 따라갈 수 있게 출력 정리
+- 추가 옵션: `--approve`, `--deny`, `--leave-pending`
+
+### Step 37
+
+- 변경: [docs/cli-wrapper-testing.md](cli-wrapper-testing.md)에 `demo:all` 발표형 사용법 추가
+- 내용: 자동 승인 기본값, 거절/대기 유지 옵션, 단계별 출력 구조와 추천 시나리오 반영
+- 다음 작업: build 확인 후 remote에 반영
