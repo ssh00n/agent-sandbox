@@ -5,9 +5,12 @@ import path from "node:path";
 
 const baseUrl = process.env.DEMO_BASE_URL ?? "http://127.0.0.1:4000";
 const rawMode = process.env.DEMO_JSON === "1" || process.argv.includes("--json");
+const presentMode = process.env.DEMO_PRESENT === "1" || process.argv.includes("--present");
 
 async function main() {
-  const filteredArgs = process.argv.slice(2).filter((arg) => arg !== "--json");
+  const filteredArgs = process.argv
+    .slice(2)
+    .filter((arg) => arg !== "--json" && arg !== "--present");
   const [command, ...args] = filteredArgs;
 
   switch (command) {
@@ -125,6 +128,11 @@ function printJson(value) {
     return;
   }
 
+  if (presentMode) {
+    presentPrint(value);
+    return;
+  }
+
   prettyPrint(value);
 }
 
@@ -207,6 +215,7 @@ function printApprovalSummary(approval) {
   console.log(`  command  ${formatCommand(approval.command, approval.args)}`);
   console.log(`  cwd      ${approval.cwd}`);
   console.log(`  category ${approval.category ?? "-"}`);
+  console.log(`  intent   ${approval.intent ?? "-"}`);
   console.log(`  code     ${approval.code ?? "-"}`);
   console.log(`  reason   ${approval.reason}`);
   console.log(`  asked    ${approval.requestedAt ?? "-"}`);
@@ -222,6 +231,7 @@ function printRunDetail(record) {
   console.log(`cwd        ${record.request.cwd}`);
   console.log(`policy     ${record.policyDecision.decision}`);
   console.log(`category   ${record.policyDecision.category ?? "-"}`);
+  console.log(`intent     ${record.policyDecision.intent ?? "-"}`);
   console.log(`code       ${record.policyDecision.code ?? "-"}`);
   console.log(`reason     ${record.policyDecision.reason}`);
   console.log(`started    ${record.result?.startedAt ?? "-"}`);
@@ -301,6 +311,62 @@ function formatEventType(type) {
     default:
       return type;
   }
+}
+
+function presentPrint(value) {
+  if (isRunRecord(value)) {
+    printSection(`Run ${value.runId ?? value.result?.runId ?? "unknown"}`);
+    console.log(`${value.request.command} ${value.request.args.join(" ")}`.trim());
+    console.log(`status: ${value.result?.status ?? "-"} | policy: ${value.policyDecision.intent} (${value.policyDecision.code})`);
+    const stages = summarizeStages(value);
+    if (stages) {
+      console.log(`flow: ${stages}`);
+    }
+    if (value.result?.stderr) {
+      console.log(`stderr: ${firstNonEmptyLine(value.result.stderr)}`);
+    }
+    if (value.result?.stdout) {
+      console.log(`stdout: ${firstNonEmptyLine(value.result.stdout)}`);
+    }
+    return;
+  }
+
+  if (isRecord(value) && Array.isArray(value.approvals)) {
+    printSection("Approvals");
+    for (const approval of value.approvals) {
+      console.log(
+        `${approval.runId} | ${approval.intent ?? "-"} | ${approval.code ?? "-"} | ${approval.command} ${approval.args.join(" ")}`
+      );
+    }
+    if (value.approvals.length === 0) {
+      console.log("No pending approvals.");
+    }
+    return;
+  }
+
+  if (isRecord(value) && Array.isArray(value.runs)) {
+    printSection("Runs");
+    for (const run of value.runs) {
+      console.log(
+        `${run.runId} | ${run.status} | ${run.runner} | ${run.command} ${run.args.join(" ")}`
+      );
+    }
+    return;
+  }
+
+  if (isRecord(value) && Array.isArray(value.events) && typeof value.runId === "string") {
+    printSection(`Events ${value.runId}`);
+    for (const event of value.events) {
+      console.log(`${formatEventType(event.type)}`);
+    }
+    return;
+  }
+
+  prettyPrint(value);
+}
+
+function firstNonEmptyLine(value) {
+  return value.split("\n").find((line) => line.trim().length > 0) ?? "";
 }
 
 function replaceRepoRoot(value, repoRoot) {

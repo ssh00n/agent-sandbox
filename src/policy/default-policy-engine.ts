@@ -34,6 +34,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
         decision: "deny",
         code: "cwd_outside_writable_roots",
         category: "filesystem",
+        intent: "external_path_access",
         reason: "Current working directory is outside writable roots.",
         violations
       };
@@ -44,6 +45,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
         decision: "require_approval",
         code: "network_capable_command",
         category: "network",
+        intent: "network_access",
         reason: "Network-capable command requires explicit approval.",
         violations
       };
@@ -54,6 +56,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
         decision: "require_approval",
         code: "danger_full_access_requested",
         category: "environment",
+        intent: "environment_escalation",
         reason: "Danger-full-access mode requires explicit approval.",
         violations
       };
@@ -64,6 +67,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
         decision: "require_approval",
         code: "package_install_command",
         category: "environment",
+        intent: "package_installation",
         reason: "Package installation requires explicit approval.",
         violations
       };
@@ -74,6 +78,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
         decision: "require_approval",
         code: "destructive_command",
         category: "destructive",
+        intent: "destructive_change",
         reason: "Potentially destructive command requires approval.",
         violations
       };
@@ -84,6 +89,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
         decision: "require_approval",
         code: "absolute_path_target_outside_writable_roots",
         category: "filesystem",
+        intent: "external_path_access",
         reason: "Command targets an absolute path outside writable roots.",
         violations
       };
@@ -93,6 +99,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
       decision: "allow",
       code: "allowed_by_default_policy",
       category: "default",
+      intent: "safe_read",
       reason: "Command is allowed by the default policy.",
       violations
     };

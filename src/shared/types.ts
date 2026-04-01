@@ -7,6 +7,13 @@ export type PolicyCategory =
   | "destructive"
   | "environment"
   | "default";
+export type PolicyIntent =
+  | "safe_read"
+  | "network_access"
+  | "environment_escalation"
+  | "package_installation"
+  | "destructive_change"
+  | "external_path_access";
 
 export type RunStatus =
   | "queued"
@@ -65,6 +72,7 @@ export interface PolicyDecision {
   decision: ApprovalDecision;
   code: string;
   category: PolicyCategory;
+  intent: PolicyIntent;
   reason: string;
   violations: string[];
 }
@@ -101,6 +109,7 @@ export interface ApprovalSummary {
   cwd: string;
   code?: string;
   category?: PolicyCategory;
+  intent?: PolicyIntent;
   reason: string;
   requestedAt: string | null;
 }

@@ -191,3 +191,20 @@
 
 - 검증: `danger_full_access`, `npm install`, `/etc/hosts` absolute path target 케이스를 재평가
 - 결과: 각각 `danger_full_access_requested`, `package_install_command`, `absolute_path_target_outside_writable_roots`로 분류되는 것 확인
+
+### Step 33
+
+- 변경: policy decision에 `intent` 필드 추가
+- 예시 intent: `network_access`, `package_installation`, `environment_escalation`, `external_path_access`
+- 목적: 명령 이름보다 상위 수준의 행동 의도로 approval 사유를 설명할 수 있게 정리
+
+### Step 34
+
+- 변경: CLI에 `--present` 모드 추가
+- 동작: 발표용으로 `status | intent(code) | flow` 중심의 더 짧은 출력 제공
+- 변경: approval 목록에도 `intent` 표시
+
+### Step 35
+
+- 검증: `npm install` 케이스가 `intent=package_installation`으로 기록되는 것 확인
+- 검증: build/check 재통과
