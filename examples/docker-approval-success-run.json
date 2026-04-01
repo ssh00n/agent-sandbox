@@ -1,0 +1,24 @@
+{
+  "runner": "docker",
+  "containerImage": "curlimages/curl:8.12.1",
+  "command": "curl",
+  "args": [
+    "https://example.com"
+  ],
+  "setupCommands": [
+    {
+      "command": "sh",
+      "args": [
+        "-lc",
+        "echo approval-success-demo > approval-success.txt"
+      ]
+    }
+  ],
+  "cwd": "__REPO_ROOT__",
+  "sandboxMode": "danger_full_access",
+  "writableRoots": [
+    "__REPO_ROOT__"
+  ],
+  "timeoutMs": 15000,
+  "requestNetwork": true
+}

@@ -1,0 +1,31 @@
+{
+  "name": "codex-sandbox-orchestrator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript skeleton for a Codex-style sandbox orchestrator",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "start": "node dist/server/index.js",
+    "demo:health": "node scripts/demo.mjs health",
+    "demo:help": "node scripts/demo.mjs help",
+    "demo:create": "node scripts/demo.mjs create",
+    "demo:runs": "node scripts/demo.mjs runs",
+    "demo:run": "node scripts/demo.mjs run",
+    "demo:events": "node scripts/demo.mjs events",
+    "demo:approvals": "node scripts/demo.mjs approvals",
+    "demo:approve": "node scripts/demo.mjs approve",
+    "demo:deny": "node scripts/demo.mjs deny",
+    "demo:all": "node scripts/demo-all.mjs",
+    "verify:docker": "node scripts/verify-runner.mjs docker",
+    "verify:macos": "node scripts/verify-runner.mjs macos"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.0"
+  }
+}

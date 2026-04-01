@@ -1,0 +1,28 @@
+{
+  "runner": "docker",
+  "containerImage": "alpine:3.20",
+  "command": "sh",
+  "args": [
+    "-lc",
+    "echo \"agent phase\" && test \"$API_KEY\" = '$API_KEY' && pwd && ls"
+  ],
+  "setupCommands": [
+    {
+      "command": "sh",
+      "args": [
+        "-lc",
+        "echo \"setup phase\" && echo setup > phase.txt"
+      ]
+    }
+  ],
+  "cwd": "__REPO_ROOT__",
+  "sandboxMode": "workspace_write",
+  "writableRoots": [
+    "__REPO_ROOT__"
+  ],
+  "env": {
+    "API_KEY": "real-secret-for-setup-only"
+  },
+  "timeoutMs": 10000,
+  "requestNetwork": false
+}
