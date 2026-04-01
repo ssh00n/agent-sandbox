@@ -124,6 +124,7 @@ npm run demo:all -- examples/docker-approval-success-run.json --leave-pending
 - `policy`, `status`, `exitCode`, `stdout`, `stderr` 핵심만 요약
 - `severity`, `summary`로 왜 승인/차단인지 바로 해석 가능
 - 이벤트는 `approval:requested`, `setup:start`, `setup:done` 같은 짧은 라벨로 표시
+- 마지막 `== Narrative ==`에서 `what / mechanism / so-what` 발표용 요약 제공
 
 ## 3. 추천 테스트 순서
 
@@ -214,4 +215,5 @@ npm run demo:all -- examples/docker-approval-success-run.json --leave-pending
 - [README.md](../README.md)
 - [docs/validation-checklist.md](validation-checklist.md)
 - [docs/native-runner-testing.md](native-runner-testing.md)
+- [docs/presentation-narrative.md](presentation-narrative.md)
 - [docs/progress-log.md](progress-log.md)

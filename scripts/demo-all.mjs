@@ -67,6 +67,9 @@ async function main() {
   printStep(6, "Final Run State");
   const finalRun = await runDemo(["run", runId]);
   printRunSummary(finalRun);
+
+  printSection("Narrative");
+  printNarrative({ scenarioSummary, initialRun, pending, finalRun });
 }
 
 function runDemo(args) {
@@ -152,6 +155,64 @@ function printEventSummary(payload) {
   for (const event of events) {
     console.log(`- ${formatEventType(event.type)}`);
   }
+}
+
+function printNarrative({ scenarioSummary, initialRun, pending, finalRun }) {
+  const policy = finalRun.policyDecision ?? initialRun.policyDecision ?? {};
+  const runner = scenarioSummary.runner;
+
+  console.log(`what      ${buildWhatHappened(policy, pending, finalRun)}`);
+  console.log(`mechanism ${buildMechanismSummary(runner, scenarioSummary, finalRun)}`);
+  console.log(`so-what   ${buildSoWhat(policy, finalRun)}`);
+}
+
+function buildWhatHappened(policy, pending, finalRun) {
+  if (pending) {
+    if (finalRun.result?.status === "blocked") {
+      return `${policy.intent ?? "unknown_intent"} was escalated to human review and then denied.`;
+    }
+
+    if (finalRun.result?.status === "awaiting_approval") {
+      return `${policy.intent ?? "unknown_intent"} crossed the default trust boundary, so execution paused for approval.`;
+    }
+
+    return `${policy.intent ?? "unknown_intent"} crossed the default trust boundary, so approval was requested before execution continued.`;
+  }
+
+  return `${policy.intent ?? "safe_read"} stayed within the default local boundary and ran without approval.`;
+}
+
+function buildMechanismSummary(runner, scenarioSummary, finalRun) {
+  const base =
+    runner === "docker"
+      ? "Container boundary with workspace-scoped mounts and optional setup->agent phase separation."
+      : "macOS Seatbelt profile via sandbox-exec limits filesystem scope and blocks privileged behavior.";
+
+  if (runner === "docker" && Array.isArray(finalRun.request?.setupCommands) && finalRun.request.setupCommands.length > 0) {
+    return `${base} Setup runs online, then the agent runs with tighter runtime constraints.`;
+  }
+
+  if (runner === "docker" && scenarioSummary.sandboxMode === "workspace_write") {
+    return `${base} The agent phase stays inside workspace_write and can be run with network disabled.`;
+  }
+
+  return base;
+}
+
+function buildSoWhat(policy, finalRun) {
+  if (policy.intent === "safe_read") {
+    return "Low-risk work can stay autonomous, which keeps the agent fast without expanding trust unnecessarily.";
+  }
+
+  if (finalRun.result?.status === "completed") {
+    return "The design goal is not zero execution. It is safe execution: risky actions are explained, approved, and still constrained by the runtime sandbox.";
+  }
+
+  if (finalRun.result?.status === "blocked" || finalRun.result?.status === "awaiting_approval") {
+    return "This is the core control loop for safe agentic workflows: detect risky intent, stop early, and require human approval before state changes or exfiltration paths open.";
+  }
+
+  return "Safe agentic workflows come from combining policy intent detection with OS-level runtime boundaries, not from trusting the model alone.";
 }
 
 function formatEventType(type) {

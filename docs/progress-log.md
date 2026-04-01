@@ -232,3 +232,15 @@
 - 변경: `demo.mjs`, `demo-all.mjs`가 `severity`, `summary`를 기본 출력에 포함하도록 보강
 - 검증: build 통과 후 `curl`, `npm install`, `rm`, `cat` 케이스에서 intent 분류가 유지되는 것 확인
 - 변경: README와 CLI 테스트 문서에 새 정책 메타데이터 설명 추가
+
+### Step 40
+
+- 변경: `demo-all` 마지막 출력에 `what / mechanism / so-what` narrative 섹션 추가
+- 목적: approval flow를 운영체제 샌드박스 메커니즘과 발표 메시지로 바로 연결
+- 기준 문서: Google Doc의 `기술적 경계와 승인 정책의 분리`, `운영체제별 샌드박스 구현 메커니즘`, `2단계 런타임 모델` 섹션
+
+### Step 41
+
+- 변경: [docs/presentation-narrative.md](presentation-narrative.md) 추가
+- 내용: macOS, Linux, Windows, Docker 기준 샌드박스 메커니즘 요약과 발표용 `So What` 정리
+- 변경: README와 CLI 테스트 문서에 발표 내러티브 문서 링크 추가
