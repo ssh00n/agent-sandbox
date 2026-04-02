@@ -1,0 +1,14 @@
+{
+  "runner": "linux",
+  "linuxBackend": "container_rootful",
+  "containerImage": "alpine:3.20",
+  "command": "/bin/pwd",
+  "args": [],
+  "cwd": "__REPO_ROOT__",
+  "sandboxMode": "workspace_write",
+  "writableRoots": [
+    "__REPO_ROOT__"
+  ],
+  "timeoutMs": 10000,
+  "requestNetwork": false
+}

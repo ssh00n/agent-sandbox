@@ -9,6 +9,7 @@
     "check": "tsc --noEmit -p tsconfig.json",
     "start": "node dist/server/index.js",
     "demo:health": "node scripts/demo.mjs health",
+    "demo:linux-capabilities": "node scripts/demo.mjs linux-capabilities",
     "demo:help": "node scripts/demo.mjs help",
     "demo:create": "node scripts/demo.mjs create",
     "demo:runs": "node scripts/demo.mjs runs",
@@ -19,7 +20,9 @@
     "demo:deny": "node scripts/demo.mjs deny",
     "demo:all": "node scripts/demo-all.mjs",
     "verify:docker": "node scripts/verify-runner.mjs docker",
-    "verify:macos": "node scripts/verify-runner.mjs macos"
+    "verify:macos": "node scripts/verify-runner.mjs macos",
+    "verify:linux": "node scripts/verify-runner.mjs linux",
+    "probe:linux-native": "node scripts/probe-linux-native.mjs"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -8,7 +8,7 @@ import type {
   RunCommandRequest,
   RunResult
 } from "../../shared/types.js";
-import type { RunnerHooks, SandboxRunner } from "../types.js";
+import type { RunnerExecution, RunnerHooks, SandboxRunner } from "../types.js";
 
 interface DockerSandboxRunnerOptions {
   defaultImage?: string;
@@ -25,7 +25,7 @@ export class DockerSandboxRunner implements SandboxRunner {
     runId: string,
     request: RunCommandRequest,
     hooks?: RunnerHooks
-  ): Promise<RunResult> {
+  ): Promise<RunnerExecution> {
     const startedAt = new Date().toISOString();
     const workspaceDir = request.cwd;
     const image = request.containerImage ?? this.defaultImage;
@@ -60,13 +60,15 @@ export class DockerSandboxRunner implements SandboxRunner {
           });
 
           return {
-            runId,
-            status: "failed",
-            exitCode: setupResult.exitCode,
-            stdout: prefixOutput("setup", setupResult.stdout),
-            stderr: prefixOutput("setup", setupResult.stderr),
-            startedAt,
-            finishedAt: new Date().toISOString()
+            result: {
+              runId,
+              status: "failed",
+              exitCode: setupResult.exitCode,
+              stdout: prefixOutput("setup", setupResult.stdout),
+              stderr: prefixOutput("setup", setupResult.stderr),
+              startedAt,
+              finishedAt: new Date().toISOString()
+            }
           };
         }
 
@@ -97,23 +99,27 @@ export class DockerSandboxRunner implements SandboxRunner {
       });
 
       return {
-        runId,
-        status: agentResult.exitCode === 0 ? "completed" : "failed",
-        exitCode: agentResult.exitCode,
-        stdout: prefixOutput("agent", agentResult.stdout),
-        stderr: prefixOutput("agent", agentResult.stderr),
-        startedAt,
-        finishedAt: new Date().toISOString()
+        result: {
+          runId,
+          status: agentResult.exitCode === 0 ? "completed" : "failed",
+          exitCode: agentResult.exitCode,
+          stdout: prefixOutput("agent", agentResult.stdout),
+          stderr: prefixOutput("agent", agentResult.stderr),
+          startedAt,
+          finishedAt: new Date().toISOString()
+        }
       };
     } catch (error) {
       return {
-        runId,
-        status: "failed",
-        exitCode: null,
-        stdout: "",
-        stderr: error instanceof Error ? error.message : "Unknown Docker runner error.",
-        startedAt,
-        finishedAt: new Date().toISOString()
+        result: {
+          runId,
+          status: "failed",
+          exitCode: null,
+          stdout: "",
+          stderr: error instanceof Error ? error.message : "Unknown Docker runner error.",
+          startedAt,
+          finishedAt: new Date().toISOString()
+        }
       };
     } finally {
       await rm(tempDir, { recursive: true, force: true });

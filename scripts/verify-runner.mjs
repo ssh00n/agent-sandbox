@@ -3,18 +3,23 @@
 import { Orchestrator } from "../dist/orchestrator/orchestrator.js";
 import { DefaultPolicyEngine } from "../dist/policy/default-policy-engine.js";
 import { DockerSandboxRunner } from "../dist/runner/docker/docker-sandbox-runner.js";
+import { LinuxSandboxRunner } from "../dist/runner/linux/linux-sandbox-runner.js";
 import { MacosSandboxRunner } from "../dist/runner/macos/macos-sandbox-runner.js";
 import { FileAuditStore } from "../dist/audit/file-audit-store.js";
 
 const runnerKind = process.argv[2];
 
 async function main() {
-  if (runnerKind !== "macos" && runnerKind !== "docker") {
-    throw new Error("Usage: node scripts/verify-runner.mjs <macos|docker>");
+  if (runnerKind !== "macos" && runnerKind !== "docker" && runnerKind !== "linux") {
+    throw new Error("Usage: node scripts/verify-runner.mjs <macos|docker|linux>");
   }
 
   const results =
-    runnerKind === "macos" ? await runMacosChecks() : await runDockerChecks();
+    runnerKind === "macos"
+      ? await runMacosChecks()
+      : runnerKind === "linux"
+        ? await runLinuxChecks()
+        : await runDockerChecks();
 
   printSection(`Runner Verification: ${runnerKind}`);
   for (const result of results) {
@@ -137,14 +142,85 @@ async function runDockerChecks() {
     {
       label: "agent runtime network blocked",
       expected: "failed with network resolution/connect error",
-      status: blockedRuntime.status,
-      detail: summarizeResult(blockedRuntime)
+      status: blockedRuntime.result.status,
+      detail: summarizeResult(blockedRuntime.result)
+    }
+  ];
+}
+
+async function runLinuxChecks() {
+  const store = new FileAuditStore(".runs-verify-linux");
+  const orchestrator = new Orchestrator(
+    new DefaultPolicyEngine(),
+    new LinuxSandboxRunner(process.env.ALLOW_UNSANDBOXED_FALLBACK === "1"),
+    store
+  );
+
+  const allowed = await orchestrator.run({
+    runner: "linux",
+    linuxBackend: "auto",
+    command: "/bin/pwd",
+    args: [],
+    cwd: process.cwd(),
+    sandboxMode: "workspace_write",
+    writableRoots: [process.cwd()],
+    timeoutMs: 5000,
+    requestNetwork: false
+  });
+
+  const denied = await orchestrator.run({
+    runner: "linux",
+    linuxBackend: "auto",
+    command: "/bin/pwd",
+    args: [],
+    cwd: "/",
+    sandboxMode: "workspace_write",
+    writableRoots: [process.cwd()],
+    timeoutMs: 5000,
+    requestNetwork: false
+  });
+
+  const approval = await orchestrator.run({
+    runner: "linux",
+    linuxBackend: "auto",
+    command: "curl",
+    args: ["https://example.com"],
+    cwd: process.cwd(),
+    sandboxMode: "workspace_write",
+    writableRoots: [process.cwd()],
+    timeoutMs: 5000,
+    requestNetwork: false
+  });
+
+  return [
+    {
+      label: "allowed local command",
+      expected: "completed or fallback/host constraint failure",
+      status: allowed.result?.status ?? "unknown",
+      detail: summarizeRun(allowed)
+    },
+    {
+      label: "cwd outside writable roots",
+      expected: "blocked",
+      status: denied.result?.status ?? "unknown",
+      detail: summarizeRun(denied)
+    },
+    {
+      label: "network-capable command requires approval",
+      expected: "awaiting_approval",
+      status: approval.result?.status ?? "unknown",
+      detail: summarizeRun(approval)
     }
   ];
 }
 
 function summarizeRun(record) {
-  return summarizeResult(record.result);
+  const summary = summarizeResult(record.result);
+  if (record.runtimeSelection?.backend) {
+    return `${summary} | backend=${record.runtimeSelection.backend}`;
+  }
+
+  return summary;
 }
 
 function summarizeResult(result) {

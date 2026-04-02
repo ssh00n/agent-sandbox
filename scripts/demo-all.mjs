@@ -17,6 +17,9 @@ async function main() {
   console.log(`file      ${scenario}`);
   console.log(`command   ${scenarioSummary.command}`);
   console.log(`runner    ${scenarioSummary.runner}`);
+  if (scenarioSummary.runner === "linux") {
+    console.log(`backend   ${scenarioSummary.linuxBackend}`);
+  }
   console.log(`sandbox   ${scenarioSummary.sandboxMode}`);
   console.log(`action    ${action}`);
 
@@ -117,6 +120,7 @@ async function loadScenarioSummary(scenarioPath) {
   return {
     command: [scenario.command, ...(scenario.args ?? [])].join(" "),
     runner: scenario.runner ?? "macos",
+    linuxBackend: scenario.linuxBackend ?? "auto",
     sandboxMode: scenario.sandboxMode ?? "workspace_write"
   };
 }
@@ -132,6 +136,11 @@ function printStep(index, title) {
 function printRunSummary(record) {
   console.log(`status    ${record.result?.status ?? "-"}`);
   console.log(`policy    ${record.policyDecision?.intent ?? "-"} (${record.policyDecision?.code ?? "-"})`);
+  if (record.runtimeSelection?.backend) {
+    console.log(
+      `runtime   ${record.runtimeSelection.backend} (${record.runtimeSelection.enforcementLevel ?? "-"})`
+    );
+  }
   console.log(`severity  ${record.policyDecision?.severity ?? "-"}`);
   console.log(`summary   ${record.policyDecision?.summary ?? "-"}`);
   if (record.result?.exitCode !== null && record.result?.exitCode !== undefined) {
@@ -183,10 +192,26 @@ function buildWhatHappened(policy, pending, finalRun) {
 }
 
 function buildMechanismSummary(runner, scenarioSummary, finalRun) {
+  if (runner === "linux" && finalRun.runtimeSelection?.backend) {
+    if (finalRun.runtimeSelection.backend === "container_rootful") {
+      return "Linux host selected a container backend because strict native isolation was unavailable but a usable Docker daemon existed.";
+    }
+
+    if (finalRun.runtimeSelection.backend === "container_rootless") {
+      return "Linux host selected a rootless container backend because strict native isolation was unavailable but a rootless container runtime was usable.";
+    }
+
+    if (finalRun.runtimeSelection.backend === "fallback") {
+      return "Linux host fell back to development execution because native strict and usable container backends were unavailable.";
+    }
+  }
+
   const base =
     runner === "docker"
       ? "Container boundary with workspace-scoped mounts and optional setup->agent phase separation."
-      : "macOS Seatbelt profile via sandbox-exec limits filesystem scope and blocks privileged behavior.";
+      : runner === "linux"
+        ? "Linux Bubblewrap sandbox constrains filesystem scope and can isolate the network namespace."
+        : "macOS Seatbelt profile via sandbox-exec limits filesystem scope and blocks privileged behavior.";
 
   if (runner === "docker" && Array.isArray(finalRun.request?.setupCommands) && finalRun.request.setupCommands.length > 0) {
     return `${base} Setup runs online, then the agent runs with tighter runtime constraints.`;
@@ -229,6 +254,18 @@ function formatEventType(type) {
       return "approval:granted";
     case "approval_denied":
       return "approval:denied";
+    case "runtime_probe_started":
+      return "runtime:probe:start";
+    case "runtime_probe_completed":
+      return "runtime:probe:done";
+    case "runtime_selected":
+      return "runtime:selected";
+    case "sandbox_apply_started":
+      return "sandbox:apply:start";
+    case "sandbox_apply_failed":
+      return "sandbox:apply:fail";
+    case "sandbox_fallback_used":
+      return "sandbox:fallback";
     default:
       return type;
   }

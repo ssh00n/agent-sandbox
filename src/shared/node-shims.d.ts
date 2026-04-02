@@ -45,6 +45,7 @@ declare module "node:http" {
 }
 
 declare module "node:fs/promises" {
+  function access(path: string): Promise<void>;
   function appendFile(path: string, data: string): Promise<void>;
   function mkdir(path: string, options?: { recursive?: boolean }): Promise<void>;
   function mkdtemp(prefix: string): Promise<string>;
@@ -56,7 +57,7 @@ declare module "node:fs/promises" {
   ): Promise<void>;
   function writeFile(path: string, data: string): Promise<void>;
 
-  export { appendFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile };
+  export { access, appendFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile };
 }
 
 declare module "node:child_process" {
@@ -99,6 +100,7 @@ declare const console: {
 declare const process: {
   cwd(): string;
   env: Record<string, string | undefined>;
+  platform: string;
 };
 
 declare function setTimeout(

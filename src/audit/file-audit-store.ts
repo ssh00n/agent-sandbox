@@ -74,6 +74,8 @@ export class FileAuditStore implements AuditStore {
         args: record.request.args,
         cwd: record.request.cwd,
         runner: record.request.runner ?? "macos",
+        runtimeBackend: record.runtimeSelection?.backend,
+        runtimeEnforcementLevel: record.runtimeSelection?.enforcementLevel,
         requestedAt: record.result?.startedAt ?? null,
         finishedAt: record.result?.finishedAt ?? null
       }))

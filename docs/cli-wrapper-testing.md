@@ -39,6 +39,14 @@ npm run demo:health
 
 서버가 떠 있으면 현재 runner 설정과 기본 이미지 정보를 반환한다.
 
+Linux capability snapshot 확인:
+
+```bash
+npm run demo:linux-capabilities
+```
+
+이 출력은 Linux host에서 `bwrap`, `docker`, `podman`, AppArmor/userns 관련 상태를 한 번에 보는 용도다.
+
 ### 시나리오로 run 생성
 
 ```bash
@@ -47,6 +55,14 @@ npm run demo:create -- examples/docker-approval-success-run.json
 
 입력 JSON을 그대로 `POST /runs`에 전송한다.
 결과 응답에서 `runId`를 확인한다.
+
+Linux backend override를 실험할 때는 아래 예시를 쓴다.
+
+```bash
+npm run demo:create -- examples/linux-auto-run.json
+npm run demo:create -- examples/linux-fallback-run.json
+npm run demo:create -- examples/linux-container-rootful-run.json
+```
 
 ### 승인 대기 목록 조회
 
@@ -73,6 +89,7 @@ npm run demo:run -- <RUN_ID>
 
 요청 원문, 정책 판단, 최종 결과까지 한 번에 볼 수 있다.
 정책 판단에는 `category`, `severity`, `intent`, `code`, `summary`, `reason`이 포함된다.
+Linux run이면 `requested linuxBackend`, 실제 `backend`, `enforcement`, `runtime reason`, `blockers`도 함께 볼 수 있다.
 
 ### 이벤트 타임라인 조회
 
@@ -188,6 +205,43 @@ npm run demo:all -- examples/docker-approval-success-run.json --leave-pending
 이 경우는 runner 자체 검증이라 `demo:create`보다 별도 예시/스크립트와 함께 보는 것이 좋다.
 핵심 확인 포인트는 agent 단계에서 `Could not resolve host` 같은 네트워크 실패가 발생하는지다.
 
+### F. Linux backend override walkthrough
+
+서버를 Linux 기본 runner로 띄웠다고 가정한다.
+
+```bash
+RUNNER_KIND=linux node dist/server/index.js
+```
+
+자동 선택 확인:
+
+```bash
+npm run demo:create -- examples/linux-auto-run.json
+npm run demo:run -- <RUN_ID>
+npm run demo:events -- <RUN_ID>
+```
+
+확인 포인트:
+
+- `backend`가 무엇으로 선택됐는지
+- `runtime` 줄에 왜 그 backend가 선택됐는지
+- `blockers` 줄에 strict native가 왜 제외됐는지
+- events에 `runtime:probe:start`, `runtime:probe:done`, `runtime:selected`가 남는지
+
+fallback 강제:
+
+```bash
+npm run demo:create -- examples/linux-fallback-run.json
+```
+
+container rootful 강제:
+
+```bash
+npm run demo:create -- examples/linux-container-rootful-run.json
+```
+
+이 세 예시를 비교하면 Linux backend override와 auto selection이 어떻게 다른지 바로 볼 수 있다.
+
 ## 4. 실패 시 해석
 
 ### `Request to http://127.0.0.1:4000/... failed`
@@ -215,4 +269,5 @@ npm run demo:all -- examples/docker-approval-success-run.json --leave-pending
 - [README.md](../README.md)
 - [docs/validation-checklist.md](validation-checklist.md)
 - [docs/native-runner-testing.md](native-runner-testing.md)
+- [docs/linux-strict-native-retest-checklist.md](linux-strict-native-retest-checklist.md)
 - [docs/progress-log.md](progress-log.md)

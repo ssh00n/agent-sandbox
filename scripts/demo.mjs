@@ -16,6 +16,8 @@ async function main() {
   switch (command) {
     case "health":
       return printJson(await getJson("/health"));
+    case "linux-capabilities":
+      return printJson(await getJson("/runtime/linux/capabilities"));
     case "create":
       return handleCreate(args);
     case "runs":
@@ -139,6 +141,7 @@ function printJson(value) {
 function printHelp() {
   console.log(`Usage:
   node scripts/demo.mjs health
+  node scripts/demo.mjs linux-capabilities
   node scripts/demo.mjs create <scenario-json-path>
   node scripts/demo.mjs runs
   node scripts/demo.mjs run <runId>
@@ -149,6 +152,12 @@ function printHelp() {
 
 Environment:
   DEMO_BASE_URL=http://127.0.0.1:4000
+
+Linux examples:
+  node scripts/demo.mjs create examples/linux-auto-run.json
+  node scripts/demo.mjs create examples/linux-fallback-run.json
+  node scripts/demo.mjs create examples/linux-container-rootful-run.json
+  node scripts/demo.mjs create examples/linux-native-strict-run.json
 `);
 }
 
@@ -158,6 +167,12 @@ function prettyPrint(value) {
     for (const run of value.runs) {
       printRunSummary(run);
     }
+    return;
+  }
+
+  if (isRecord(value) && isRecord(value.capabilities)) {
+    printSection("Linux Capabilities");
+    console.log(JSON.stringify(value.capabilities, null, 2));
     return;
   }
 
@@ -203,6 +218,12 @@ function printRunSummary(run) {
   console.log(`- ${run.runId}`);
   console.log(`  status   ${run.status}`);
   console.log(`  runner   ${run.runner}`);
+  if (run.runtimeBackend) {
+    console.log(`  backend  ${run.runtimeBackend}`);
+  }
+  if (run.runtimeEnforcementLevel) {
+    console.log(`  enforce  ${run.runtimeEnforcementLevel}`);
+  }
   console.log(`  command  ${formatCommand(run.command, run.args)}`);
   console.log(`  cwd      ${run.cwd}`);
   console.log(`  started  ${run.requestedAt ?? "-"}`);
@@ -228,6 +249,21 @@ function printRunDetail(record) {
   console.log(`runId      ${runId}`);
   console.log(`status     ${record.result?.status ?? "-"}`);
   console.log(`runner     ${record.request.runner ?? "macos"}`);
+  if (record.request.linuxBackend) {
+    console.log(`requested  ${record.request.linuxBackend}`);
+  }
+  if (record.runtimeSelection?.backend) {
+    console.log(`backend    ${record.runtimeSelection.backend}`);
+  }
+  if (record.runtimeSelection?.enforcementLevel) {
+    console.log(`enforce    ${record.runtimeSelection.enforcementLevel}`);
+  }
+  if (record.runtimeSelection?.reason) {
+    console.log(`runtime    ${record.runtimeSelection.reason}`);
+  }
+  if (record.runtimeSelection?.capabilities?.nativeStrictBlockers?.length) {
+    console.log(`blockers   ${record.runtimeSelection.capabilities.nativeStrictBlockers.join(" | ")}`);
+  }
   console.log(`sandbox    ${record.request.sandboxMode}`);
   console.log(`command    ${formatCommand(record.request.command, record.request.args)}`);
   console.log(`cwd        ${record.request.cwd}`);
@@ -312,6 +348,18 @@ function formatEventType(type) {
       return "approval:granted";
     case "approval_denied":
       return "approval:denied";
+    case "runtime_probe_started":
+      return "runtime:probe:start";
+    case "runtime_probe_completed":
+      return "runtime:probe:done";
+    case "runtime_selected":
+      return "runtime:selected";
+    case "sandbox_apply_started":
+      return "sandbox:apply:start";
+    case "sandbox_apply_failed":
+      return "sandbox:apply:fail";
+    case "sandbox_fallback_used":
+      return "sandbox:fallback";
     default:
       return type;
   }
@@ -324,6 +372,11 @@ function presentPrint(value) {
     console.log(
       `status: ${value.result?.status ?? "-"} | policy: ${value.policyDecision.intent} (${value.policyDecision.code}) | severity: ${value.policyDecision.severity}`
     );
+    if (value.runtimeSelection?.backend) {
+      console.log(
+        `runtime: ${value.runtimeSelection.backend} (${value.runtimeSelection.enforcementLevel ?? "-"})`
+      );
+    }
     console.log(`why: ${value.policyDecision.summary}`);
     const stages = summarizeStages(value);
     if (stages) {
@@ -355,7 +408,7 @@ function presentPrint(value) {
     printSection("Runs");
     for (const run of value.runs) {
       console.log(
-        `${run.runId} | ${run.status} | ${run.runner} | ${run.command} ${run.args.join(" ")}`
+        `${run.runId} | ${run.status} | ${run.runner}${run.runtimeBackend ? `/${run.runtimeBackend}` : ""} | ${run.command} ${run.args.join(" ")}`
       );
     }
     return;

@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import type { RunnerKind } from "./types.js";
+
 export interface AppConfig {
   host: string;
   port: number;
@@ -7,7 +9,7 @@ export interface AppConfig {
   writableRoots: string[];
   auditLogDir: string;
   allowUnsandboxedFallback: boolean;
-  runnerKind: "macos" | "docker";
+  runnerKind: RunnerKind;
   dockerImage: string;
 }
 
@@ -21,9 +23,17 @@ export function loadConfig(): AppConfig {
     writableRoots: [cwd],
     auditLogDir: path.join(cwd, ".runs"),
     allowUnsandboxedFallback: process.env.ALLOW_UNSANDBOXED_FALLBACK === "1",
-    runnerKind: process.env.RUNNER_KIND === "docker" ? "docker" : "macos",
+    runnerKind: parseRunnerKind(process.env.RUNNER_KIND),
     dockerImage: process.env.DOCKER_IMAGE ?? "alpine:3.20"
   };
+}
+
+function parseRunnerKind(value: string | undefined): RunnerKind {
+  if (value === "docker" || value === "linux" || value === "macos") {
+    return value;
+  }
+
+  return "macos";
 }
 
 function parseInteger(value: string | undefined, fallback: number): number {

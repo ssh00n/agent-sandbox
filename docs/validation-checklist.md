@@ -61,15 +61,15 @@
 
 ### 1차 검증 목표
 
-1. Docker runner로 setup/agent 전환 확인
-2. agent phase 네트워크 차단 확인
-3. writable mount 외부 쓰기 실패 확인
+1. Linux native runner로 허용된 cwd 명령 실행 확인
+2. 네트워크 명령이 승인 대기로 분기하는지 확인
+3. Bubblewrap 네임스페이스와 bind mount가 실제 적용되는지 확인
 
 ### 2차 확장 목표
 
-1. Docker 없이 Bubblewrap 기반 runner 추가
-2. seccomp/Landlock 조합 비교
-3. 네트워크 차단을 정책 계층이 아니라 런타임 계층에서 강제
+1. seccomp/Landlock 조합 비교
+2. setup/agent 2단계 native flow 확장
+3. 네트워크 차단을 정책 계층이 아니라 런타임 계층에서 더 강하게 강제
 
 ## 4. Windows 검증
 

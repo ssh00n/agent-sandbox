@@ -4,7 +4,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 
 import type { RunCommandRequest, RunResult } from "../../shared/types.js";
-import type { RunnerHooks, SandboxRunner } from "../types.js";
+import type { RunnerExecution, RunnerHooks, SandboxRunner } from "../types.js";
 
 export class MacosSandboxRunner implements SandboxRunner {
   constructor(private readonly allowUnsandboxedFallback = false) {}
@@ -13,7 +13,7 @@ export class MacosSandboxRunner implements SandboxRunner {
     runId: string,
     request: RunCommandRequest,
     _hooks?: RunnerHooks
-  ): Promise<RunResult> {
+  ): Promise<RunnerExecution> {
     const startedAt = new Date().toISOString();
     const profileDir = await mkdtemp(path.join(os.tmpdir(), "codex-sandbox-"));
     const profilePath = path.join(profileDir, "profile.sb");
@@ -35,39 +35,45 @@ export class MacosSandboxRunner implements SandboxRunner {
       if (shouldFallback) {
         const direct = await executeProcess(request.command, request.args, request);
         return {
-          runId,
-          status: direct.exitCode === 0 ? "completed" : "failed",
-          exitCode: direct.exitCode,
-          stdout: direct.stdout,
-          stderr: [
-            "[development-fallback] sandbox-exec could not be applied in the current environment.",
-            direct.stderr
-          ]
-            .filter((value) => value.length > 0)
-            .join("\n"),
-          startedAt,
-          finishedAt: new Date().toISOString()
+          result: {
+            runId,
+            status: direct.exitCode === 0 ? "completed" : "failed",
+            exitCode: direct.exitCode,
+            stdout: direct.stdout,
+            stderr: [
+              "[development-fallback] sandbox-exec could not be applied in the current environment.",
+              direct.stderr
+            ]
+              .filter((value) => value.length > 0)
+              .join("\n"),
+            startedAt,
+            finishedAt: new Date().toISOString()
+          }
         };
       }
 
       return {
-        runId,
-        status: sandboxed.exitCode === 0 ? "completed" : "failed",
-        exitCode: sandboxed.exitCode,
-        stdout: sandboxed.stdout,
-        stderr: sandboxed.stderr,
-        startedAt,
-        finishedAt: new Date().toISOString()
+        result: {
+          runId,
+          status: sandboxed.exitCode === 0 ? "completed" : "failed",
+          exitCode: sandboxed.exitCode,
+          stdout: sandboxed.stdout,
+          stderr: sandboxed.stderr,
+          startedAt,
+          finishedAt: new Date().toISOString()
+        }
       };
     } catch (error) {
       return {
-        runId,
-        status: "failed",
-        exitCode: null,
-        stdout: "",
-        stderr: error instanceof Error ? error.message : "Unknown runner error.",
-        startedAt,
-        finishedAt: new Date().toISOString()
+        result: {
+          runId,
+          status: "failed",
+          exitCode: null,
+          stdout: "",
+          stderr: error instanceof Error ? error.message : "Unknown runner error.",
+          startedAt,
+          finishedAt: new Date().toISOString()
+        }
       };
     } finally {
       await rm(profileDir, { recursive: true, force: true });

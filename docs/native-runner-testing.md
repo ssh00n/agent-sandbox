@@ -2,7 +2,7 @@
 
 ## 목적
 
-이 문서는 Docker와 macOS native runner를 같은 방식으로 검증하는 절차를 정리한다.
+이 문서는 Docker, macOS, Linux native runner를 같은 방식으로 검증하는 절차를 정리한다.
 
 ## 1. 준비
 
@@ -53,7 +53,47 @@ ALLOW_UNSANDBOXED_FALLBACK=1 npm run verify:macos
 
 이 fallback은 정책/흐름 검증용이고, 실제 OS-level sandbox 보장은 아니다.
 
-## 4. 출력 해석
+## 4. Linux native 검증
+
+```bash
+npm run verify:linux
+```
+
+필요하면 request payload의 `linuxBackend`로 backend를 고정할 수 있다.
+
+- `auto`
+- `native_strict`
+- `container_rootless`
+- `container_rootful`
+- `native_lsm`
+- `fallback`
+
+예시 payload:
+
+- [examples/linux-auto-run.json](../examples/linux-auto-run.json)
+- [examples/linux-fallback-run.json](../examples/linux-fallback-run.json)
+- [examples/linux-container-rootful-run.json](../examples/linux-container-rootful-run.json)
+- [examples/linux-native-strict-run.json](../examples/linux-native-strict-run.json)
+
+확인 항목:
+
+1. 허용된 cwd에서 로컬 명령이 실행되는지
+2. writable root 밖 cwd는 `blocked`로 떨어지는지
+3. 네트워크 가능 명령은 승인 대기로 분기하는지
+
+주의:
+
+- Linux host에서 `bwrap`가 설치되어 있어야 native sandbox가 실제 적용된다
+- user namespace 제한이 있는 환경에서는 `Operation not permitted` 계열 오류가 날 수 있다
+- `runtimeSelection.reason`과 `runtime_probe_completed` 이벤트를 보면 strict native blocker를 확인할 수 있다
+- low-level probe는 `npm run probe:linux-native [workspace]`로 별도 확인 가능하다
+- 이런 환경에서 정책/흐름만 검증하려면 아래처럼 fallback을 켤 수 있다
+
+```bash
+ALLOW_UNSANDBOXED_FALLBACK=1 npm run verify:linux
+```
+
+## 5. 출력 해석
 
 각 항목은 다음 세 줄로 출력된다.
 
@@ -63,7 +103,7 @@ ALLOW_UNSANDBOXED_FALLBACK=1 npm run verify:macos
 
 즉, JSON 전체를 읽지 않아도 핵심만 빠르게 볼 수 있게 한 것이다.
 
-## 5. 관련 문서
+## 6. 관련 문서
 
 - [README.md](../README.md)
 - [docs/cli-wrapper-testing.md](cli-wrapper-testing.md)

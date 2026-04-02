@@ -20,10 +20,12 @@
 - `runner`
   - 실제 프로세스 실행
   - 플랫폼별 샌드박스 구현 세부사항 캡슐화
+  - Linux에서는 `probe -> resolve -> delegate` 구조로 runtime backend 선택
 
 - `audit`
   - 실행 이벤트 저장
   - 차단 사유 및 결과 조회
+  - runtime selection trace와 fallback 사유 보존
 
 ## Phase 0 설계 결정
 
@@ -32,3 +34,25 @@
 - 감사 로그는 이벤트 기반 모델을 사용한다.
 - 초기 저장소는 파일 기반을 가정하되, 인터페이스는 DB 교체 가능하도록 분리한다.
 - macOS와 Docker runner는 동일한 `SandboxRunner` 인터페이스를 구현한다.
+- Linux runner는 동일 인터페이스 뒤에서 capability-aware backend selection을 수행한다.
+
+## 현재 Runtime 모델
+
+이 프로젝트는 상위 control plane을 고정하고 runtime backend를 플랫폼별로 바꾼다.
+
+- `policy`
+  - 위험 의도 판별
+  - approval 필요 여부 결정
+
+- `runner`
+  - macOS: Seatbelt 기반 native sandbox
+  - Docker: container boundary
+  - Linux: capability probe 후 `native_strict | container_rootless | container_rootful | native_lsm | fallback` 선택
+
+- `audit`
+  - policy decision
+  - runtime selection
+  - capability snapshot
+  - sandbox apply failure / fallback reason
+
+즉 아키텍처의 핵심은 `one policy plane, multiple runtime backends`다.

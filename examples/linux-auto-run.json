@@ -1,0 +1,13 @@
+{
+  "runner": "linux",
+  "linuxBackend": "auto",
+  "command": "/bin/pwd",
+  "args": [],
+  "cwd": "__REPO_ROOT__",
+  "sandboxMode": "workspace_write",
+  "writableRoots": [
+    "__REPO_ROOT__"
+  ],
+  "timeoutMs": 5000,
+  "requestNetwork": false
+}

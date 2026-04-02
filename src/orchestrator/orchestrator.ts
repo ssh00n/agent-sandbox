@@ -71,7 +71,7 @@ export class Orchestrator {
 
     await this.auditStore.appendEvent(createEvent(runId, "started", { request }));
 
-    const result = await this.runner.run(runId, request, {
+    const execution = await this.runner.run(runId, request, {
       onEvent: async (type, data) => {
         await this.auditStore.appendEvent(
           createEvent(runId, type, {
@@ -81,6 +81,7 @@ export class Orchestrator {
         );
       }
     });
+    const result = execution.result;
     await this.auditStore.appendEvent(
       createEvent(runId, result.status === "completed" ? "completed" : "failed", {
         exitCode: result.exitCode,
@@ -92,6 +93,7 @@ export class Orchestrator {
       runId,
       request,
       policyDecision,
+      runtimeSelection: execution.runtimeSelection,
       result
     };
 
@@ -116,7 +118,7 @@ export class Orchestrator {
     );
     await this.auditStore.appendEvent(createEvent(runId, "started", { request: record.request }));
 
-    const result = await this.runner.run(runId, record.request, {
+    const execution = await this.runner.run(runId, record.request, {
       onEvent: async (type, data) => {
         await this.auditStore.appendEvent(
           createEvent(runId, type, {
@@ -126,6 +128,7 @@ export class Orchestrator {
         );
       }
     });
+    const result = execution.result;
     await this.auditStore.appendEvent(
       createEvent(runId, result.status === "completed" ? "completed" : "failed", {
         exitCode: result.exitCode,
@@ -135,6 +138,7 @@ export class Orchestrator {
 
     const updatedRecord: RunRecord = {
       ...record,
+      runtimeSelection: execution.runtimeSelection ?? record.runtimeSelection,
       result
     };
 

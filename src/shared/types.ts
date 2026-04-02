@@ -1,4 +1,13 @@
 export type SandboxMode = "read_only" | "workspace_write" | "danger_full_access";
+export type RunnerKind = "macos" | "docker" | "linux";
+export type LinuxBackend =
+  | "auto"
+  | "native_strict"
+  | "container_rootless"
+  | "container_rootful"
+  | "native_lsm"
+  | "fallback";
+export type RuntimeEnforcementLevel = "strict" | "container" | "partial" | "fallback";
 
 export type ApprovalDecision = "allow" | "deny" | "require_approval";
 export type PolicyCategory =
@@ -31,6 +40,12 @@ export type RunEventType =
   | "approval_requested"
   | "approval_granted"
   | "approval_denied"
+  | "runtime_probe_started"
+  | "runtime_probe_completed"
+  | "runtime_selected"
+  | "sandbox_apply_started"
+  | "sandbox_apply_failed"
+  | "sandbox_fallback_used"
   | "setup_started"
   | "setup_completed"
   | "setup_failed"
@@ -55,7 +70,8 @@ export interface RunCommandRequest {
   env?: Record<string, string>;
   timeoutMs?: number;
   requestNetwork?: boolean;
-  runner?: "macos" | "docker";
+  runner?: RunnerKind;
+  linuxBackend?: LinuxBackend;
   containerImage?: string;
   setupCommands?: CommandSpec[];
 }
@@ -97,10 +113,36 @@ export interface RunResult {
   finishedAt: string | null;
 }
 
+export interface LinuxRuntimeCapabilities {
+  platform: string;
+  bwrapAvailable: boolean;
+  unshareAvailable: boolean;
+  podmanAvailable: boolean;
+  podmanUsable: boolean;
+  podmanFailureReason: string | null;
+  dockerAvailable: boolean;
+  dockerUsable: boolean;
+  dockerFailureReason: string | null;
+  setprivAvailable: boolean;
+  apparmorRestrictsUserns: boolean | null;
+  unprivilegedUsernsClone: boolean | null;
+  nativeStrictCandidate: boolean;
+  nativeStrictBlockers: string[];
+}
+
+export interface RuntimeSelection {
+  runner: "linux";
+  backend: LinuxBackend;
+  enforcementLevel: RuntimeEnforcementLevel;
+  reason: string;
+  capabilities?: LinuxRuntimeCapabilities;
+}
+
 export interface RunRecord {
   runId?: string;
   request: RunCommandRequest;
   policyDecision: PolicyDecision;
+  runtimeSelection?: RuntimeSelection;
   result?: RunResult;
 }
 
@@ -125,7 +167,9 @@ export interface RunSummary {
   command: string;
   args: string[];
   cwd: string;
-  runner: "macos" | "docker";
+  runner: RunnerKind;
+  runtimeBackend?: LinuxBackend;
+  runtimeEnforcementLevel?: RuntimeEnforcementLevel;
   requestedAt: string | null;
   finishedAt: string | null;
 }

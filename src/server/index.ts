@@ -5,12 +5,15 @@ import { FileAuditStore } from "../audit/file-audit-store.js";
 import { Orchestrator } from "../orchestrator/orchestrator.js";
 import { DefaultPolicyEngine } from "../policy/default-policy-engine.js";
 import { DockerSandboxRunner } from "../runner/docker/docker-sandbox-runner.js";
+import { LinuxCapabilityProbe } from "../runner/linux/capability-probe.js";
+import { LinuxSandboxRunner } from "../runner/linux/linux-sandbox-runner.js";
 import { MacosSandboxRunner } from "../runner/macos/macos-sandbox-runner.js";
 import { loadConfig } from "../shared/config.js";
 import type { CommandSpec, RunCommandRequest } from "../shared/types.js";
 
 const config = loadConfig();
 const auditStore = new FileAuditStore(config.auditLogDir);
+const linuxCapabilityProbe = new LinuxCapabilityProbe();
 
 const server = http.createServer(async (request, response) => {
   try {
@@ -28,6 +31,11 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "GET" && request.url === "/approvals") {
       const approvals = await auditStore.listPendingApprovals();
       return respondJson(response, 200, { approvals });
+    }
+
+    if (request.method === "GET" && request.url === "/runtime/linux/capabilities") {
+      const capabilities = await linuxCapabilityProbe.probe();
+      return respondJson(response, 200, { capabilities });
     }
 
     if (request.method === "GET" && request.url === "/runs") {
@@ -153,6 +161,7 @@ function validateRunCommandRequest(value: unknown): RunCommandRequest {
   const timeoutMs = optionalNumber(value.timeoutMs, "timeoutMs");
   const requestNetwork = optionalBoolean(value.requestNetwork, "requestNetwork");
   const runner = optionalRunner(value.runner);
+  const linuxBackend = optionalLinuxBackend(value.linuxBackend);
   const containerImage = optionalString(value.containerImage, "containerImage");
   const setupCommands = optionalCommandSpecArray(value.setupCommands, "setupCommands");
 
@@ -166,6 +175,7 @@ function validateRunCommandRequest(value: unknown): RunCommandRequest {
     timeoutMs,
     requestNetwork,
     runner,
+    linuxBackend,
     containerImage,
     setupCommands
   };
@@ -268,16 +278,46 @@ function optionalBoolean(value: unknown, fieldName: string): boolean | undefined
   return value;
 }
 
-function optionalRunner(value: unknown): "macos" | "docker" | undefined {
+function optionalRunner(value: unknown): "macos" | "docker" | "linux" | undefined {
   if (value === undefined) {
     return undefined;
   }
 
-  if (value === "macos" || value === "docker") {
+  if (value === "macos" || value === "docker" || value === "linux") {
     return value;
   }
 
-  throw new Error("runner must be one of macos or docker.");
+  throw new Error("runner must be one of macos, linux, or docker.");
+}
+
+function optionalLinuxBackend(
+  value: unknown
+):
+  | "auto"
+  | "native_strict"
+  | "container_rootless"
+  | "container_rootful"
+  | "native_lsm"
+  | "fallback"
+  | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (
+    value === "auto" ||
+    value === "native_strict" ||
+    value === "container_rootless" ||
+    value === "container_rootful" ||
+    value === "native_lsm" ||
+    value === "fallback"
+  ) {
+    return value;
+  }
+
+  throw new Error(
+    "linuxBackend must be one of auto, native_strict, container_rootless, container_rootful, native_lsm, fallback."
+  );
 }
 
 function optionalCommandSpecArray(
@@ -323,6 +363,13 @@ function respondJson(
 function createRunner(request: RunCommandRequest) {
   if (request.runner === "docker") {
     return new DockerSandboxRunner({ defaultImage: config.dockerImage });
+  }
+
+  if (request.runner === "linux") {
+    return new LinuxSandboxRunner({
+      allowUnsandboxedFallback: config.allowUnsandboxedFallback,
+      containerRunner: new DockerSandboxRunner({ defaultImage: config.dockerImage })
+    });
   }
 
   return new MacosSandboxRunner(config.allowUnsandboxedFallback);
