@@ -61,5 +61,4 @@ npm run verify:macos
 - validation checklist: [docs/validation-checklist.md](docs/validation-checklist.md)
 - CLI wrapper testing: [docs/cli-wrapper-testing.md](docs/cli-wrapper-testing.md)
 - native runner testing: [docs/native-runner-testing.md](docs/native-runner-testing.md)
-- presentation narrative: [docs/presentation-narrative.md](docs/presentation-narrative.md)
 - architecture notes: [docs/architecture.md](docs/architecture.md)

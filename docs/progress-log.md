@@ -241,6 +241,6 @@
 
 ### Step 41
 
-- 변경: [docs/presentation-narrative.md](presentation-narrative.md) 추가
+- 변경: 발표 내러티브 문서 초안 작성
 - 내용: macOS, Linux, Windows, Docker 기준 샌드박스 메커니즘 요약과 발표용 `So What` 정리
-- 변경: README와 CLI 테스트 문서에 발표 내러티브 문서 링크 추가
+- 변경: README와 CLI 테스트 문서에 관련 링크 추가

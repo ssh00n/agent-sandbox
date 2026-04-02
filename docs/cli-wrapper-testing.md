@@ -215,5 +215,4 @@ npm run demo:all -- examples/docker-approval-success-run.json --leave-pending
 - [README.md](../README.md)
 - [docs/validation-checklist.md](validation-checklist.md)
 - [docs/native-runner-testing.md](native-runner-testing.md)
-- [docs/presentation-narrative.md](presentation-narrative.md)
 - [docs/progress-log.md](progress-log.md)
